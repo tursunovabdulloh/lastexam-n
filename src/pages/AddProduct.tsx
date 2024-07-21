@@ -14,7 +14,6 @@ export default function AddProduct() {
     nation: "",
     price: 0,
   });
-  const [modalOpen, setModalOpen] = useState(false);
 
   const isValidURL = (url: string) => {
     try {
@@ -241,10 +240,7 @@ export default function AddProduct() {
               >
                 Apply
               </button>
-              <button
-                onClick={() => setModalOpen(true)}
-                className="btn bg-accent w-[245px] hover:bg-accent-focus"
-              >
+              <button className="btn bg-accent w-[245px] hover:bg-accent-focus">
                 Preview
               </button>
             </div>
