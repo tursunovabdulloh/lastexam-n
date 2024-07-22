@@ -116,16 +116,24 @@ function Signup() {
               className="w-full h-12 px-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <button
-            type="submit"
-            className="w-full py-3 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            Signup
-          </button>
+          <div className="flex flex-col gap-y-4">
+            <button
+              type="submit"
+              className="w-full py-3 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              Signup
+            </button>
+            <button
+              type="submit"
+              className="w-full py-3 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              Google
+            </button>
+          </div>
         </form>
         <div className="flex justify-center mt-4">
           <a className="text-sm text-blue-600 hover:underline" href="/login">
-            are you alredy exist?
+            I have an account
           </a>
         </div>
       </div>

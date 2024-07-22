@@ -1,5 +1,5 @@
 export interface Recipe {
-  id?: string;
+  id: string;
   title: string;
   cookingTime: number;
   nation: string;
@@ -7,6 +7,9 @@ export interface Recipe {
   imageURLs: string[];
   method: string;
   price?: number;
+  productId: string;
+  count: number;
+  imageUrl: string;
 }
 export interface User {
   uid: string;

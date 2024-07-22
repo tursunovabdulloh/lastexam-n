@@ -1,14 +1,21 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { Recipe } from "../types";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { toast, ToastContainer } from "react-toastify";
+import { addToCart, deleteCart } from "../store/cartSlice";
+import "react-toastify/dist/ReactToastify.css";
+import { FiShoppingCart } from "react-icons/fi";
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const cartItems = useSelector((state: any) => state.cart.items);
   const theme = useSelector((state: any) => state.theme.theme);
+  const userId = JSON.parse(localStorage.getItem("userId") || "null");
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -30,22 +37,88 @@ export default function ProductDetail() {
     fetchRecipe();
   }, [id]);
 
+  const handleAddToCartClick = async (
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ): Promise<void> => {
+    e.stopPropagation();
+
+    if (!recipe || !recipe.id) {
+      console.error("Recipe ID is missing");
+      return;
+    }
+
+    const productId = recipe.id;
+    const newCartItems = new Set(cartItems.map((item: any) => item.id));
+
+    if (newCartItems.has(productId)) {
+      newCartItems.delete(productId);
+      toast.info("Removed from cart!");
+
+      dispatch(deleteCart(productId));
+
+      if (userId) {
+        const cartDocRef = doc(db, "cart", userId);
+        try {
+          const cartDocSnap = await getDoc(cartDocRef);
+          if (cartDocSnap.exists()) {
+            const cartData = cartDocSnap.data();
+            delete cartData[productId];
+            await setDoc(cartDocRef, cartData);
+          }
+        } catch (error) {
+          console.error("Error removing item from cart: ", error);
+        }
+      }
+    } else {
+      newCartItems.add(productId);
+      toast.success("Added to cart!");
+
+      dispatch(addToCart(recipe));
+
+      if (userId) {
+        const cartDocRef = doc(db, "cart", userId);
+        try {
+          const cartDocSnap = await getDoc(cartDocRef);
+          if (cartDocSnap.exists()) {
+            await setDoc(
+              cartDocRef,
+              {
+                [productId]: recipe,
+              },
+              { merge: true }
+            );
+          } else {
+            await setDoc(cartDocRef, {
+              [productId]: recipe,
+            });
+          }
+        } catch (error) {
+          console.error("Error adding item to cart: ", error);
+        }
+      }
+    }
+  };
+
   if (!recipe) {
     return (
-      <div className="container mx-auto p-4 flex justify-center items-center h-screen">
-        <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent border-solid rounded-full animate-spin"></div>
+      <div className="relative mt-40 items-center justify-center">
+        <div className="absolute top-[30%] left-1/2 transform -translate-x-1/2 -translate-y-1/4">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent border-solid rounded-full animate-spin"></div>
+        </div>
       </div>
     );
   }
 
+  const isProductInCart = cartItems.some((item: any) => item.id === recipe.id);
+
   return (
     <div className="container flex justify-center p-4">
-      <div className="w-[1200px]  bg-base-100 shadow-xl rounded-lg overflow-hidden">
+      <div className="w-[1200px] bg-base-100 shadow-xl rounded-lg overflow-hidden">
         <div
           className={
             theme === "synthwave"
-              ? "w-full  max-w-[1280px] h-[360px] mx-auto  shadow-xl rounded-lg overflow-hidden bg-[#221551]"
-              : "w-full  max-w-[1280px] h-[360px] mx-auto  shadow-xl rounded-lg overflow-hidden bg-[#2a3340]"
+              ? "w-full max-w-[1280px] h-[360px] mx-auto shadow-xl rounded-lg overflow-hidden bg-[#221551]"
+              : "w-full max-w-[1280px] h-[360px] mx-auto shadow-xl rounded-lg overflow-hidden bg-[#2a3340]"
           }
         >
           <div className="carousel carousel-center bg-neutral rounded-box w-full max-w-full space-x-4 p-4">
@@ -136,12 +209,23 @@ export default function ProductDetail() {
             </span>
           </p>
           <div className="flex justify-end gap-4 mt-4">
-            <button className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition">
-              Add to Cart
+            <button
+              className={`border-2 rounded-lg shadow flex items-center gap-2 px-4 py-2 ${
+                isProductInCart
+                  ? "border-green-100 bg-green-500 text-white"
+                  : "border-gray-300 bg-blue-500 text-white"
+              } transition-colors duration-300 hover:bg-blue-600`}
+              onClick={handleAddToCartClick}
+            >
+              <FiShoppingCart
+                className={`text-xl ${
+                  isProductInCart ? "text-green-600" : "text-white"
+                }`}
+              />
+              {isProductInCart ? "Remove from Cart" : "Add to Cart"}
             </button>
             <button
               className="bg-gray-500 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-600 transition"
-              // onClick={() => window.history.back()} // winodow.hitory.back() undan oldingni page ga qaytaradi
               onClick={() => navigate("/")}
             >
               Back
@@ -149,6 +233,7 @@ export default function ProductDetail() {
           </div>
         </div>
       </div>
+      <ToastContainer />
     </div>
   );
 }

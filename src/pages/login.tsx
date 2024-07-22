@@ -67,8 +67,9 @@ function Login() {
       );
 
       const firebaseUser = userCredential.user;
-      console.log("Logged in user:", firebaseUser);
 
+      console.log("Logged in user:", firebaseUser);
+      localStorage.setItem("userId", JSON.stringify(userCredential.user.uid));
       const user = mapFirebaseUserToUser(firebaseUser);
       dispatch(login(user));
 
@@ -122,15 +123,22 @@ function Login() {
               onChange={handleChange}
             />
           </div>
+
           <button
             type="submit"
             className="w-full py-3 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150 ease-in-out"
           >
-            LOGIN
+            Login
+          </button>
+          <button
+            type="submit"
+            className="w-full py-3 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150 ease-in-out"
+          >
+            Google
           </button>
           <div className="flex justify-center mt-4">
             <a className="text-sm text-blue-600 hover:underline" href="/signup">
-              Not a member yet?
+              I have no account yet?
             </a>
           </div>
         </form>
