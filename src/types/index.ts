@@ -1,11 +1,12 @@
 export interface Recipe {
   id?: string;
   title: string;
-  cookingtime: number;
+  cookingTime: number;
   nation: string;
   ingredients: string[];
-  imageurl: string[];
-  methods: string;
+  imageURLs: string[];
+  method: string;
+  price?: number;
 }
 export interface User {
   uid: string;

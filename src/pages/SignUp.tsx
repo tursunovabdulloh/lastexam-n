@@ -123,6 +123,11 @@ function Signup() {
             Signup
           </button>
         </form>
+        <div className="flex justify-center mt-4">
+          <a className="text-sm text-blue-600 hover:underline" href="/login">
+            are you alredy exist?
+          </a>
+        </div>
       </div>
     </div>
   );

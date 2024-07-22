@@ -1,18 +1,21 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { Recipe } from "../types";
+import { useSelector } from "react-redux";
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const theme = useSelector((state: any) => state.theme.theme);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchRecipe = async () => {
       if (id) {
         try {
-          const docRef = doc(db, "recipes", id);
+          const docRef = doc(db, "recipe", id);
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
             setRecipe(docSnap.data() as Recipe);
@@ -37,11 +40,17 @@ export default function ProductDetail() {
 
   return (
     <div className="container flex justify-center p-4">
-      <div className="w-[1200px]  bg-white shadow-xl rounded-lg overflow-hidden">
-        <div className="w-full max-w-[1280px] mx-auto bg-white shadow-xl rounded-lg overflow-hidden">
+      <div className="w-[1200px]  bg-base-100 shadow-xl rounded-lg overflow-hidden">
+        <div
+          className={
+            theme === "synthwave"
+              ? "w-full  max-w-[1280px] h-[360px] mx-auto  shadow-xl rounded-lg overflow-hidden bg-[#221551]"
+              : "w-full  max-w-[1280px] h-[360px] mx-auto  shadow-xl rounded-lg overflow-hidden bg-[#2a3340]"
+          }
+        >
           <div className="carousel carousel-center bg-neutral rounded-box w-full max-w-full space-x-4 p-4">
-            {recipe.imageurl && recipe.imageurl.length > 0 ? (
-              recipe.imageurl.map((url, index) => (
+            {recipe.imageURLs && recipe.imageURLs.length > 0 ? (
+              recipe.imageURLs.map((url, index) => (
                 <div
                   className="carousel-item flex-shrink-0 w-full sm:w-[600px] h-[400px] sm:h-[400px]"
                   key={index}
@@ -49,7 +58,7 @@ export default function ProductDetail() {
                   <img
                     src={url}
                     alt={`Recipe image ${index}`}
-                    className="w-full h-full object-cover rounded-box"
+                    className="w-[600px] h-[320px] object-cover rounded-box"
                   />
                 </div>
               ))
@@ -68,7 +77,15 @@ export default function ProductDetail() {
         <div className="p-6">
           <h2 className="text-2xl font-bold mb-2">{recipe.title}</h2>
           <div className="flex mb-2">
-            <p className="text-gray-700 font-semibold mb-1">Ingredients:</p>
+            <p
+              className={
+                theme === "synthwave"
+                  ? "text-white"
+                  : "text-gray-700 font-semibold"
+              }
+            >
+              Ingredients:
+            </p>
             <div className="flex">
               <ul className="flex gap-2 list-disc list-inside pl-5">
                 {recipe.ingredients.map((ingredient, index) => (
@@ -82,19 +99,37 @@ export default function ProductDetail() {
               </ul>
             </div>
           </div>
-          <p className="text-gray-700 font-semibold mb-4">
+          <p
+            className={
+              theme === "synthwave"
+                ? "text-white font-semibold mb-4"
+                : "text-gray-700 font-semibold mb-4"
+            }
+          >
             Cooking Time:{" "}
             <span className="font-bold badge badge-accent text-white">
-              {recipe.cookingtime} minutes
+              {recipe.cookingTime} minutes
             </span>
           </p>
-          <p className="text-gray-700 font-semibold mb-4">
+          <p
+            className={
+              theme === "synthwave"
+                ? "text-white font-semibold mb-4"
+                : "text-gray-700 font-semibold mb-4"
+            }
+          >
             Methods:{" "}
             <span className="font-bold badge badge-accent text-white">
-              {recipe.methods}
+              {recipe.method}
             </span>
           </p>
-          <p className="text-gray-700 font-semibold mb-2">
+          <p
+            className={
+              theme === "synthwave"
+                ? "text-white font-semibold mb-4"
+                : "text-gray-700 font-semibold mb-4"
+            }
+          >
             Nation:{" "}
             <span className="font-bold badge badge-accent text-white">
               {recipe.nation}
@@ -106,9 +141,10 @@ export default function ProductDetail() {
             </button>
             <button
               className="bg-gray-500 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-600 transition"
-              onClick={() => window.history.back()}
+              // onClick={() => window.history.back()} // winodow.hitory.back() undan oldingni page ga qaytaradi
+              onClick={() => navigate("/")}
             >
-              Back to List
+              Back
             </button>
           </div>
         </div>

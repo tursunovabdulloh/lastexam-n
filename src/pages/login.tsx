@@ -8,9 +8,9 @@ import {
 import { auth } from "../firebase";
 import { useDispatch } from "react-redux";
 import { login } from "../store/userSlice";
-import { message } from "antd";
-import "antd/dist/reset.css";
 import { User } from "../types";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface LoginData {
   email: string;
@@ -55,7 +55,7 @@ function Login() {
     e.preventDefault();
 
     if (!logindata.email || !logindata.password) {
-      message.error("Please fill out all fields.");
+      toast.error("Please fill out all fields.");
       return;
     }
 
@@ -79,11 +79,12 @@ function Login() {
       );
       localStorage.setItem("userData", JSON.stringify(userCredential.user));
 
-      message.success("Successfully logged in!");
+      toast.success("Successfully logged in!");
+
       navigate("/");
     } catch (error) {
       console.error("Error signing in with password and email", error);
-      message.error("Invalid email or password.");
+      toast.error("Invalid email or password.");
     }
   };
 
@@ -93,41 +94,47 @@ function Login() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center mx-auto mt-24 max-w-md bg-white shadow-xl rounded-lg p-6 space-y-6 md:max-w-lg md:mt-32 lg:max-w-xl lg:mt-40">
-      <h2 className="text-3xl font-bold text-center text-gray-700">Login</h2>
-      <form className="flex flex-col space-y-4" onSubmit={handleSubmit}>
-        <div className="flex flex-col space-y-2">
-          <label className="text-sm font-medium text-gray-700">Email</label>
-          <input
-            type="email"
-            name="email"
-            className="w-full h-12 px-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-            value={logindata.email}
-            onChange={handleChange}
-          />
-        </div>
-        <div className="flex flex-col space-y-2">
-          <label className="text-sm font-medium text-gray-700">Password</label>
-          <input
-            type="password"
-            name="password"
-            className="w-full h-12 px-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-            value={logindata.password}
-            onChange={handleChange}
-          />
-        </div>
-        <button
-          type="submit"
-          className="w-full py-3 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          LOGIN
-        </button>
-        <div className="flex justify-center mt-4">
-          <a className="text-sm text-gray-700" href="/signup">
-            Not a member yet?
-          </a>
-        </div>
-      </form>
+    <div className="flex justify-center items-center min-h-screen p-4">
+      <div className="w-full max-w-md bg-white shadow-lg p-6 rounded-lg">
+        <h2 className="text-2xl sm:text-3xl font-bold  text-gray-800 mb-8">
+          Login
+        </h2>
+        <form className="flex flex-col space-y-4" onSubmit={handleSubmit}>
+          <div className="flex flex-col space-y-2">
+            <label className="text-sm font-medium text-gray-700">Email</label>
+            <input
+              type="email"
+              name="email"
+              className="w-full h-12 px-4 border border-gray-300 rounded-lg shadow-sm outline-none focus:ring-2 focus:ring-blue-500 transition duration-150 ease-in-out"
+              value={logindata.email}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="flex flex-col space-y-2">
+            <label className="text-sm font-medium text-gray-700">
+              Password
+            </label>
+            <input
+              type="password"
+              name="password"
+              className="w-full h-12 px-4 border border-gray-300 rounded-lg shadow-sm outline-none focus:ring-2 focus:ring-blue-500 transition duration-150 ease-in-out"
+              value={logindata.password}
+              onChange={handleChange}
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full py-3 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150 ease-in-out"
+          >
+            LOGIN
+          </button>
+          <div className="flex justify-center mt-4">
+            <a className="text-sm text-blue-600 hover:underline" href="/signup">
+              Not a member yet?
+            </a>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

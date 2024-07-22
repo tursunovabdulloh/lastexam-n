@@ -8,8 +8,10 @@ import Home from "./pages/Home";
 import AddProduct from "./pages/AddProduct";
 import ProductDetail from "./pages/ProductDetail";
 import Login from "./pages/login";
-import { useSelector } from "react-redux";
 import Signup from "./pages/SignUp";
+import ProductCart from "./pages/productCart";
+import ApexChart from "./pages/ApexChart";
+import { useSelector } from "react-redux";
 
 export default function App() {
   const ProtectedRoutes: React.FC<{ children: JSX.Element }> = ({
@@ -37,11 +39,19 @@ export default function App() {
           element: <Home />,
         },
         {
+          path: "/apexchart",
+          element: <ApexChart />,
+        },
+        {
+          path: "/productcart",
+          element: <ProductCart />,
+        },
+        {
           path: "/addproduct",
           element: <AddProduct />,
         },
         {
-          path: "recipes/:id",
+          path: "/recipes/:id",
           element: <ProductDetail />,
         },
       ],
