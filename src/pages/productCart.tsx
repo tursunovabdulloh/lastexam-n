@@ -13,7 +13,7 @@ export default function ProductCart() {
   const dispatch = useDispatch();
   const cartItems = useSelector((state: any) => state.cart.items);
   const theme = useSelector((state: any) => state.theme.theme);
-  const userId = JSON.parse(localStorage.getItem("userId") || "null");
+  // const userId = JSON.parse(localStorage.getItem("userId") || "null");
   const [products, setProducts] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [showConfirm, setShowConfirm] = useState(false);

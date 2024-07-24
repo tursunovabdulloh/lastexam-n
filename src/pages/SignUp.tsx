@@ -11,16 +11,9 @@ import {
 import background from "../../public/premium_photo.jfif";
 import { doc, setDoc } from "firebase/firestore";
 import { SignupData } from "../types";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import { login } from "../store/userSlice";
-
-export interface User {
-  uid: string;
-  username: string;
-  photoUrl: string;
-  email: string;
-  createdAt: Date;
-}
+import { user } from "../store/userSlice";
 
 function Signup() {
   const [signupData, setSignupData] = useState<SignupData>({
@@ -31,9 +24,7 @@ function Signup() {
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const user = useSelector((state: any) => state.user.user);
   const dispatch = useDispatch();
-  console.log(user);
 
   const handleGoogle = async () => {
     setLoading(true);
@@ -42,7 +33,7 @@ function Signup() {
       const req = await signInWithPopup(auth, provider);
       const fUser = req.user as FirebaseUser;
 
-      const user: User = {
+      const user: user = {
         uid: fUser.uid,
         username: fUser.displayName || "",
         photoUrl: fUser.photoURL || "/default-avatar.png",
@@ -84,7 +75,7 @@ function Signup() {
         photoURL: photoUrl,
       });
 
-      const userData: User = {
+      const userData: user = {
         uid: user.uid,
         username,
         photoUrl,
@@ -191,7 +182,7 @@ function Signup() {
               onClick={handleGoogle}
               className="w-full py-3 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              Google
+              Sign up with Google
             </button>
           </div>
         </form>
