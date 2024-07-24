@@ -15,7 +15,7 @@ export interface CartItem {
   count: number;
 }
 
-export interface User {
+export interface LoginUser {
   uid: string;
   email: string;
   emailVerified: boolean;
@@ -26,6 +26,22 @@ export interface User {
   lastLoginAt: string;
   providerData: any;
   stsTokenManager: any;
+  username?: string;
+  photoUrl?: string;
+}
+export interface SignUser {
+  uid: string;
+  email: string;
+  emailVerified: boolean;
+  apiKey: string;
+  appName: string;
+  createdAt: string;
+  isAnonymous: boolean;
+  lastLoginAt: string;
+  providerData: any;
+  stsTokenManager: any;
+  username: string;
+  photoUrl: string;
 }
 
 export interface SignupData {

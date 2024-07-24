@@ -10,7 +10,7 @@ import {
 import { auth } from "../firebase";
 import { useDispatch } from "react-redux";
 import { login } from "../store/userSlice";
-import { User } from "../types";
+import { LoginUser } from "../types";
 import { toast } from "react-toastify";
 import background from "../../public/premium_photo.jfif";
 import "react-toastify/dist/ReactToastify.css";
@@ -20,7 +20,7 @@ interface LoginData {
   password: string;
 }
 
-const mapFirebaseUserToUser = (firebaseUser: FirebaseUser): User => {
+const mapFirebaseUserToUser = (firebaseUser: FirebaseUser): LoginUser => {
   return {
     uid: firebaseUser.uid,
     email: firebaseUser.email || "",
