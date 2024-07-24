@@ -1,177 +1,213 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { incrementCount, decrementCount, setCart } from "../store/cartSlice";
+import { getDoc, doc } from "firebase/firestore";
 import { db } from "../firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { Recipe } from "../types";
+import { incrementCount, decrementCount, deleteCart } from "../store/cartSlice";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { LuDelete } from "react-icons/lu";
+import { BsEmojiSmileUpsideDown } from "react-icons/bs";
 
-function ProductCart() {
-  const [loading, setLoading] = useState<boolean>(true);
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
-  const theme = useSelector((state: any) => state.theme.theme);
-
-  const userId = JSON.parse(localStorage.getItem("userId") || "null");
-
+export default function ProductCart() {
   const dispatch = useDispatch();
   const cartItems = useSelector((state: any) => state.cart.items);
+  const theme = useSelector((state: any) => state.theme.theme);
+  const userId = JSON.parse(localStorage.getItem("userId") || "null");
+  const [products, setProducts] = useState<Recipe[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(
+    null
+  );
+
+  console.log("Cart Items:", cartItems);
 
   useEffect(() => {
-    const fetchCartItems = async () => {
-      if (!userId) {
-        console.log("User ID mavjud emas");
-        setLoading(false);
-        return;
-      }
+    const fetchProducts = async () => {
+      setLoading(true);
       try {
-        const cartDocRef = doc(db, "cart", userId);
-        const cartDocSnap = await getDoc(cartDocRef);
-
-        if (cartDocSnap.exists()) {
-          const data = cartDocSnap.data();
-          const fetchedData = Object.values(data || []);
-          console.log("Olingan ma'lumotlar:", fetchedData);
-          dispatch(setCart(fetchedData));
-        } else {
-          console.log("Cart hujjati topilmadi");
+        const productIds = Object.keys(cartItems);
+        console.log("Product IDs:", productIds);
+        if (productIds.length === 0) {
+          setProducts([]);
+          setLoading(false);
+          return;
         }
+
+        const fetchedProducts: Recipe[] = [];
+        for (const id of productIds) {
+          const productRef = doc(db, "recipe", id);
+          const productDoc = await getDoc(productRef);
+          if (productDoc.exists()) {
+            const productData = productDoc.data();
+            fetchedProducts.push({
+              id: productDoc.id,
+              title: productData.title,
+              cookingTime: productData.cookingTime,
+              ingredients: productData.ingredients || [],
+              imageURLs: productData.imageURLs || [],
+              method: productData.method,
+              nation: productData.nation,
+              price: productData.price || 0,
+            } as Recipe);
+          } else {
+            console.warn(`Product with id ${id} not found`);
+          }
+        }
+        setProducts(fetchedProducts);
       } catch (error) {
-        console.error("Savat ma'lumotlarini olishda xato:", error);
+        console.error("Error fetching products: ", error);
+        toast.error("Error fetching products");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCartItems();
-  }, [userId, dispatch]);
+    fetchProducts();
+  }, [cartItems]);
 
-  const handleCountChange = (id: string, increment: boolean) => {
-    if (!id) {
-      console.error("Product ID is missing or undefined");
-      return;
-    }
-
-    if (increment) {
-      dispatch(incrementCount(id));
-    } else {
-      dispatch(decrementCount(id));
-    }
+  const handleIncrement = (productId: string) => {
+    dispatch(incrementCount(productId));
   };
 
-  const handleCheckboxChange = (id: string) => {
-    console.log("Checkbox change for Product ID:", id);
-    setSelectedItems((prevSelectedItems) => {
-      if (prevSelectedItems.includes(id)) {
-        return prevSelectedItems.filter((id) => id !== id);
-      } else {
-        return [...prevSelectedItems, id];
+  const handleDecrement = (productId: string) => {
+    dispatch(decrementCount(productId));
+  };
+
+  const handleDelete = (productId: string) => {
+    setSelectedProductId(productId);
+    setShowConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (selectedProductId) {
+      try {
+        dispatch(deleteCart(selectedProductId));
+        toast.info("Product removed from cart");
+        setShowConfirm(false);
+      } catch (error) {
+        console.error("Error removing item from cart: ", error);
+        toast.error("Error removing product from cart");
       }
-    });
+    }
   };
 
-  const selectedProducts = cartItems.filter((item: any) =>
-    selectedItems.includes(item.productId)
-  );
-
-  const calculateTotalPrice = (): string => {
-    return selectedProducts
-      .reduce(
-        (total: number, item: any) =>
-          total +
-          (item.price || 0) *
-            (cartItems.find((i: any) => i.productId === item.productId)
-              ?.count || 0),
-        0
-      )
-      .toFixed(2);
+  const handleCancelDelete = () => {
+    setShowConfirm(false);
+    setSelectedProductId(null);
   };
+
+  if (loading) {
+    return (
+      <div className="relative mt-40 items-center justify-center">
+        <div className="absolute top-[30%] left-1/2 transform -translate-x-1/2 -translate-y-1/4">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent border-solid rounded-full animate-spin"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-4">
-      <h2 className="text-2xl text-center font-bold mb-4">Product Cart</h2>
-      {loading ? (
-        <div className="relative mt-40 items-center justify-center">
-          <div className="absolute top-[30%] left-1/2 transform -translate-x-1/2 -translate-y-1/4">
-            <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent border-solid rounded-full animate-spin"></div>
-          </div>
+      <h2 className="text-center mt-5 mb-8 font-bold text-2xl">Your Cart</h2>
+      {products.length === 0 ? (
+        <div className="text-center text-xl">
+          <BsEmojiSmileUpsideDown className="mx-auto mb-4 text-4xl" />
+          <p>Your cart is empty!</p>
         </div>
-      ) : cartItems.length === 0 ? (
-        <p className="text-center">No items in cart</p>
       ) : (
-        <div className="flex flex-col lg:flex-row gap-8">
-          <div className="flex-1">
-            <div className="grid grid-cols-1 gap-4">
-              {cartItems.map((item: any) => (
-                <div
-                  key={item.id}
-                  className="rounded-lg p-4 flex gap-8 border-b border-gray-300 last:border-bottom-2"
-                >
-                  <div>
-                    <input
-                      type="checkbox"
-                      checked={selectedItems.includes(item.id)}
-                      onChange={() => handleCheckboxChange(item.id)}
-                    />
-                  </div>
-                  <div className="border-2 border-gray-300 rounded-md w-32 h-32">
-                    <img
-                      src={item.imageURLs[0] || "/default-image.png"}
-                      alt={item.title}
-                      className="w-32 h-32 object-cover rounded-md"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <div className="w-full flex justify-between items-center mb-2">
-                      <p
-                        className={
-                          theme === "synthwave"
-                            ? "text-lg font-bold text-gray-100"
-                            : "text-lg font-bold text-gray-700"
-                        }
-                      >
-                        {item.title}
-                      </p>
-                      <div className="flex items-center">
-                        <button
-                          onClick={() => handleCountChange(item.id, false)}
-                          className="btn btn-neutral rounded-full min-h-0 text-white w-8 h-8"
-                        >
-                          -
-                        </button>
-                        <p className="mx-2 text-gray-500">{item.count || 0}</p>
-                        <button
-                          onClick={() => handleCountChange(item.id, true)}
-                          className="btn btn-neutral rounded-full min-h-0 text-white w-8 h-8"
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                    <div className="flex justify-between">
-                      <p
-                        className={
-                          theme === "synthwave"
-                            ? "text-lg font-bold text-gray-100"
-                            : "text-lg font-bold text-gray-800"
-                        }
-                      >
-                        {item.price} $
-                      </p>
-                    </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
+          {products.map((product) => (
+            <div
+              key={product.id}
+              className={
+                theme === "synthwave"
+                  ? "bg-base-300 rounded-lg shadow-md overflow-hidden"
+                  : "bg-base-100 rounded-lg shadow-md overflow-hidden"
+              }
+            >
+              <div className="flex flex-col p-4">
+                <div className="flex items-center">
+                  <h2 className="text-xl font-bold mb-2 mr-auto">
+                    {product.title}
+                  </h2>
+                  <LuDelete
+                    style={{ zoom: 2 }}
+                    onClick={() => handleDelete(product.id)}
+                    className="cursor-pointer text-gray-700 hover:text-red-500 transition-colors duration-300"
+                  />
+                </div>
+                <p className="text-gray-700 font-semibold">
+                  Method: {product.method.slice(0, 35)}...
+                </p>
+                <p className="text-gray-700 font-semibold">
+                  Price: ${product.price?.toFixed(2)}
+                </p>
+                <div className="flex items-start mt-[4px] gap-y-2">
+                  <p className="mr-auto text-white bg-green-500 rounded-xl p-1">
+                    {product.cookingTime} minutes
+                  </p>
+                  <div className="flex items-center">
+                    <button
+                      onClick={() => handleIncrement(product.id)}
+                      className="bg-green-500 text-white px-3 py-1 rounded-l"
+                    >
+                      +
+                    </button>
+                    <span className="bg-gray-300 text-gray-700 px-3 py-1">
+                      {cartItems[product.id]?.count || 0}
+                    </span>
+                    <button
+                      onClick={() => handleDecrement(product.id)}
+                      className="bg-red-500 text-white px-3 py-1 rounded-r"
+                    >
+                      -
+                    </button>
                   </div>
                 </div>
-              ))}
+              </div>
+              {product.imageURLs && product.imageURLs.length > 0 && (
+                <div className="w-full h-[280px]">
+                  <img
+                    src={product.imageURLs[0]}
+                    alt={product.title}
+                    className="object-cover w-full h-full"
+                  />
+                </div>
+              )}
             </div>
-          </div>
-          {selectedItems.length > 0 && (
-            <div className="flex-1 bg-gray-100 p-4 rounded-lg border border-gray-300">
-              <h3 className="text-xl font-bold mb-4">Summary</h3>
-              <p className="mb-2">Total Price: {calculateTotalPrice()} $</p>
-              {/* Add more summary details if needed */}
-            </div>
-          )}
+          ))}
         </div>
       )}
+      {showConfirm && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div
+            className={
+              theme === "synthwave"
+                ? "flex flex-col items-center bg-gray-700 text-white p-6 rounded-lg shadow-lg max-w-sm w-full"
+                : "flex flex-col items-center bg-white text-gray-700 font-semibold p-6 rounded-lg shadow-lg max-w-sm w-full"
+            }
+          >
+            <h3 className="text-lg font-semibold mb-4">Are you sure?</h3>
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={handleCancelDelete}
+                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      <ToastContainer />
     </div>
   );
 }
-
-export default ProductCart;

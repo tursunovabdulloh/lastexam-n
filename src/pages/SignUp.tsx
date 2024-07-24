@@ -1,10 +1,26 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth, db } from "../firebase";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  updateProfile,
+  User as FirebaseUser,
+} from "firebase/auth";
+import background from "../../public/premium_photo.jfif";
 import { doc, setDoc } from "firebase/firestore";
 import { SignupData } from "../types";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { login } from "../store/userSlice";
+
+export interface User {
+  uid: string;
+  username: string;
+  photoUrl: string;
+  email: string;
+  createdAt: Date;
+}
 
 function Signup() {
   const [signupData, setSignupData] = useState<SignupData>({
@@ -16,7 +32,38 @@ function Signup() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const user = useSelector((state: any) => state.user.user);
+  const dispatch = useDispatch();
   console.log(user);
+
+  const handleGoogle = async () => {
+    setLoading(true);
+    try {
+      const provider = new GoogleAuthProvider();
+      const req = await signInWithPopup(auth, provider);
+      const fUser = req.user as FirebaseUser;
+
+      const user: User = {
+        uid: fUser.uid,
+        username: fUser.displayName || "",
+        photoUrl: fUser.photoURL || "/default-avatar.png",
+        email: fUser.email || "",
+        createdAt: new Date(),
+      };
+
+      await setDoc(doc(db, "users", fUser.uid), user);
+
+      dispatch(login(user));
+
+      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("rasm", user.photoUrl);
+
+      navigate("/");
+    } catch (error) {
+      console.error("Error signing up with Google:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!signupData.email || !signupData.password) return;
@@ -37,12 +84,20 @@ function Signup() {
         photoURL: photoUrl,
       });
 
-      await setDoc(doc(db, "users", user.uid), {
+      const userData: User = {
+        uid: user.uid,
         username,
         photoUrl,
         email,
         createdAt: new Date(),
-      });
+      };
+
+      await setDoc(doc(db, "users", user.uid), userData);
+
+      dispatch(login(userData));
+
+      localStorage.setItem("user", JSON.stringify(userData));
+      localStorage.setItem("rasm", userData.photoUrl);
 
       navigate("/");
     } catch (error) {
@@ -63,14 +118,22 @@ function Signup() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen p-4">
-      <div className="w-full max-w-md bg-white shadow-lg p-6 rounded-lg">
+    <div
+      className="relative flex justify-center items-center min-h-screen p-4"
+      style={{
+        backgroundImage: `url(${background})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
+      {loading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent border-solid rounded-full animate-spin"></div>
+        </div>
+      )}
+      <div className="w-full max-w-md bg-[#ffffff58] shadow-lg p-6 rounded-lg">
         <h2 className="text-2xl font-bold mb-6 text-gray-700">Signup</h2>
-        {loading && (
-          <div className="w-full flex justify-center mb-4">
-            <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent border-solid rounded-full animate-spin"></div>
-          </div>
-        )}
         <form onSubmit={handleFormSubmit}>
           <div className="mb-4">
             <label className="block text-gray-700 mb-2">Username</label>
@@ -124,7 +187,8 @@ function Signup() {
               Signup
             </button>
             <button
-              type="submit"
+              type="button"
+              onClick={handleGoogle}
               className="w-full py-3 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               Google

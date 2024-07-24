@@ -1,111 +1,56 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Recipe } from "../types";
 
-export interface CartItem extends Recipe {
+interface CartItem {
+  id: string;
   count: number;
 }
 
-export interface CartState {
-  items: CartItem[];
-  selectedItems: string[];
+interface CartState {
+  items: { [key: string]: CartItem };
+  selectedItems: Set<string>;
 }
 
 const initialState: CartState = {
-  items: JSON.parse(localStorage.getItem("cartItems") || "[]") || [],
-  selectedItems:
-    JSON.parse(localStorage.getItem("selectedItems") || "[]") || [],
+  items: {},
+  selectedItems: new Set(),
 };
 
 const cartSlice = createSlice({
   name: "cart",
   initialState,
   reducers: {
-    addToCart: (state, action: PayloadAction<CartItem>) => {
-      const itemIndex = state.items.findIndex(
-        (item) => item.productId === action.payload.productId
-      );
-
-      if (itemIndex > -1) {
-        // Update count if item already exists
-        state.items[itemIndex].count += action.payload.count;
+    addToCart(state, action: PayloadAction<CartItem>) {
+      const item = action.payload;
+      if (state.items[item.id]) {
+        state.items[item.id].count += item.count;
       } else {
-        // Add new item to cart
-        state.items.push(action.payload);
+        state.items[item.id] = item;
       }
-
-      // Update localStorage
-      localStorage.setItem("cartItems", JSON.stringify(state.items));
     },
-    deleteCart: (state, action: PayloadAction<string>) => {
-      // Remove item from cart
-      state.items = state.items.filter(
-        (item) => item.productId !== action.payload
-      );
-
-      // Update localStorage
-      localStorage.setItem("cartItems", JSON.stringify(state.items));
+    deleteCart(state, action: PayloadAction<string>) {
+      delete state.items[action.payload];
+      state.selectedItems.delete(action.payload);
     },
-    deleteAll: (state) => {
-      // Clear all items
-      state.items = [];
-
-      // Update localStorage
-      localStorage.setItem("cartItems", JSON.stringify(state.items));
-    },
-    setCart: (state, action: PayloadAction<CartItem[]>) => {
-      // Set cart with new data
-      state.items = action.payload;
-
-      // Update localStorage
-      localStorage.setItem("cartItems", JSON.stringify(state.items));
-    },
-    incrementCount: (state, action: PayloadAction<string>) => {
-      // Find the item and increment its count
-      const item = state.items.find(
-        (item) => item.productId === action.payload
-      );
-      if (item) {
-        item.count += 1;
+    incrementCount(state, action: PayloadAction<string>) {
+      if (state.items[action.payload]) {
+        state.items[action.payload].count += 1;
       }
-
-      // Update localStorage
-      localStorage.setItem("cartItems", JSON.stringify(state.items));
     },
-    decrementCount: (state, action: PayloadAction<string>) => {
-      // Find the item and decrement its count
-      const item = state.items.find(
-        (item) => item.productId === action.payload
-      );
-      if (item && item.count > 0) {
-        item.count -= 1;
+    decrementCount(state, action: PayloadAction<string>) {
+      if (state.items[action.payload]) {
+        if (state.items[action.payload].count > 1) {
+          state.items[action.payload].count -= 1;
+        } else {
+          delete state.items[action.payload];
+          state.selectedItems.delete(action.payload);
+        }
       }
-
-      // Update localStorage
-      localStorage.setItem("cartItems", JSON.stringify(state.items));
     },
-    selectItem: (state, action: PayloadAction<string>) => {
-      // Add item to selectedItems if not already present
-      if (!state.selectedItems.includes(action.payload)) {
-        state.selectedItems.push(action.payload);
-      }
-
-      // Update localStorage
-      localStorage.setItem(
-        "selectedItems",
-        JSON.stringify(state.selectedItems)
-      );
+    selectItem(state, action: PayloadAction<string>) {
+      state.selectedItems.add(action.payload);
     },
-    deselectItem: (state, action: PayloadAction<string>) => {
-      // Remove item from selectedItems
-      state.selectedItems = state.selectedItems.filter(
-        (id) => id !== action.payload
-      );
-
-      // Update localStorage
-      localStorage.setItem(
-        "selectedItems",
-        JSON.stringify(state.selectedItems)
-      );
+    deselectItem(state, action: PayloadAction<string>) {
+      state.selectedItems.delete(action.payload);
     },
   },
 });
@@ -113,8 +58,6 @@ const cartSlice = createSlice({
 export const {
   addToCart,
   deleteCart,
-  deleteAll,
-  setCart,
   incrementCount,
   decrementCount,
   selectItem,

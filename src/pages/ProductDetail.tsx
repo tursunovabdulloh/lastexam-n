@@ -28,9 +28,11 @@ export default function ProductDetail() {
             setRecipe(docSnap.data() as Recipe);
           } else {
             console.log("No such document!");
+            toast.error("Recipe not found.");
           }
         } catch (error) {
           console.error("Error fetching recipe: ", error);
+          toast.error("Error fetching recipe.");
         }
       }
     };
@@ -67,6 +69,7 @@ export default function ProductDetail() {
           }
         } catch (error) {
           console.error("Error removing item from cart: ", error);
+          toast.error("Error removing item from cart.");
         }
       }
     } else {
@@ -94,6 +97,7 @@ export default function ProductDetail() {
           }
         } catch (error) {
           console.error("Error adding item to cart: ", error);
+          toast.error("Error adding item to cart.");
         }
       }
     }
@@ -109,17 +113,15 @@ export default function ProductDetail() {
     );
   }
 
-  const isProductInCart = cartItems.some((item: any) => item.id === recipe.id);
+  const isProductInCart = Object.keys(cartItems).includes(recipe.id);
 
   return (
     <div className="container flex justify-center p-4">
       <div className="w-[1200px] bg-base-100 shadow-xl rounded-lg overflow-hidden">
         <div
-          className={
-            theme === "synthwave"
-              ? "w-full max-w-[1280px] h-[360px] mx-auto shadow-xl rounded-lg overflow-hidden bg-[#221551]"
-              : "w-full max-w-[1280px] h-[360px] mx-auto shadow-xl rounded-lg overflow-hidden bg-[#2a3340]"
-          }
+          className={`w-full max-w-full h-[360px] mx-auto shadow-xl rounded-lg overflow-hidden ${
+            theme === "synthwave" ? "bg-[#221551]" : "bg-[#2a3340]"
+          }`}
         >
           <div className="carousel carousel-center bg-neutral rounded-box w-full max-w-full space-x-4 p-4">
             {recipe.imageURLs && recipe.imageURLs.length > 0 ? (

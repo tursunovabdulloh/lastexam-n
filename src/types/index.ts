@@ -2,15 +2,19 @@ export interface Recipe {
   id: string;
   title: string;
   cookingTime: number;
-  nation: string;
   ingredients: string[];
   imageURLs: string[];
   method: string;
-  price?: number;
-  productId: string;
+  nation: string;
+  price: number;
   count: number;
-  imageUrl: string;
 }
+
+export interface CartItem {
+  id: string;
+  count: number;
+}
+
 export interface User {
   uid: string;
   email: string;
@@ -23,6 +27,7 @@ export interface User {
   providerData: any;
   stsTokenManager: any;
 }
+
 export interface SignupData {
   username: string;
   photoUrl: string;
