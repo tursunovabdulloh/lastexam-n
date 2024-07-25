@@ -1,4 +1,5 @@
 import React from "react";
+import { useSelector } from "react-redux";
 
 interface PreviewModalProps {
   recipe: {
@@ -13,10 +14,16 @@ interface PreviewModalProps {
 }
 
 const ProductModal: React.FC<PreviewModalProps> = ({ recipe, onClose }) => {
+  const theme = useSelector((state: any) => state.theme.theme);
+
   return (
     <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex justify-center items-center">
-      <div className="w-[1200px] bg-white shadow-xl rounded-lg overflow-hidden">
-        <div className="w-full max-w-[1280px] h-[360px] mx-auto bg-white shadow-xl rounded-lg overflow-hidden">
+      <div className="w-[1200px] bg-base-100 shadow-xl rounded-lg overflow-hidden">
+        <div
+          className={`w-full max-w-full h-[360px] mx-auto shadow-xl rounded-lg overflow-hidden ${
+            theme === "synthwave" ? "bg-[#221551]" : "bg-[#2a3340]"
+          }`}
+        >
           <div className="carousel carousel-center bg-neutral rounded-box w-full max-w-full space-x-4 p-4">
             {recipe.imageURLs.length > 0 ? (
               recipe.imageURLs.map((url, index) => (
@@ -46,12 +53,24 @@ const ProductModal: React.FC<PreviewModalProps> = ({ recipe, onClose }) => {
         <div className="p-6">
           <h2 className="text-2xl font-bold mb-2">{recipe.title}</h2>
           <div className="flex mb-2">
-            <p className="text-gray-700 font-semibold mb-1">Ingredients:</p>
+            <p
+              className={
+                theme === "synthwave"
+                  ? "text-white font-semibold mb-1"
+                  : "text-gray-700 font-semibold mb-1"
+              }
+            >
+              Ingredients:
+            </p>
             <div className="flex">
               <ul className="flex gap-2 list-disc list-inside pl-5">
                 {recipe.ingredients.map((ingredient, index) => (
                   <p
-                    className="flex gap-4 badge badge-neutral text-white"
+                    className={
+                      theme === "synthwave"
+                        ? " flex gap-4 badge badge-neutral text-white "
+                        : "text-gray-700  flex gap-4 badge badge-neutral"
+                    }
                     key={index}
                   >
                     {ingredient}
@@ -60,19 +79,37 @@ const ProductModal: React.FC<PreviewModalProps> = ({ recipe, onClose }) => {
               </ul>
             </div>
           </div>
-          <p className="text-gray-700 font-semibold mb-4">
+          <p
+            className={
+              theme === "synthwave"
+                ? "text-white  font-semibold mb-4"
+                : "text-gray-700 font-semibold mb-4"
+            }
+          >
             Cooking Time:{" "}
             <span className="font-bold badge badge-accent text-white">
               {recipe.cookingTime} minutes
             </span>
           </p>
-          <p className="text-gray-700 font-semibold mb-4">
+          <p
+            className={
+              theme === "synthwave"
+                ? "text-white font-semibold mb-4"
+                : "text-gray-700 font-semibold mb-4"
+            }
+          >
             Methods:{" "}
             <span className="font-bold badge badge-accent text-white">
               {recipe.method}
             </span>
           </p>
-          <p className="text-gray-700 font-semibold mb-2">
+          <p
+            className={
+              theme === "synthwave"
+                ? "text-white font-semibold mb-4"
+                : "text-gray-700 font-semibold mb-4"
+            }
+          >
             Nation:{" "}
             <span className="font-bold badge badge-accent text-white">
               {recipe.nation}

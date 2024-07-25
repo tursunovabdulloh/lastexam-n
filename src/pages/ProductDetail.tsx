@@ -12,7 +12,7 @@ import { FiShoppingCart } from "react-icons/fi";
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
-  const cartItems = useSelector((state: any) => state.cart.items);
+  const cartItems = useSelector((state: any) => state.cart.items) || [];
   const theme = useSelector((state: any) => state.theme.theme);
   const userId = JSON.parse(localStorage.getItem("userId") || "null");
   const dispatch = useDispatch();
@@ -113,7 +113,9 @@ export default function ProductDetail() {
     );
   }
 
-  const isProductInCart = Object.keys(cartItems).includes(recipe.id);
+  const isProductInCart =
+    Array.isArray(cartItems) &&
+    cartItems.some((item: any) => item.id === recipe.id);
 
   return (
     <div className="container flex justify-center p-4">
@@ -163,12 +165,12 @@ export default function ProductDetail() {
             </p>
             <div className="flex">
               <ul className="flex gap-2 list-disc list-inside pl-5">
-                {recipe.ingredients.map((ingredient, index) => (
+                {recipe.ingredients.map((ing, index) => (
                   <p
                     className="flex gap-4 badge badge-neutral text-white"
                     key={index}
                   >
-                    {ingredient}
+                    {ing}
                   </p>
                 ))}
               </ul>
@@ -218,6 +220,7 @@ export default function ProductDetail() {
                   : "border-gray-300 bg-blue-500 text-white"
               } transition-colors duration-300 hover:bg-blue-600`}
               onClick={handleAddToCartClick}
+              disabled={isProductInCart}
             >
               <FiShoppingCart
                 className={`text-xl ${

@@ -1,101 +1,130 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getDoc, doc } from "firebase/firestore";
+import { doc, updateDoc, deleteField, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
+import {
+  decrementCount,
+  deleteCart,
+  incrementCount,
+  setCartItems,
+} from "../store/cartSlice";
 import { Recipe } from "../types";
-import { incrementCount, decrementCount, deleteCart } from "../store/cartSlice";
-import { ToastContainer, toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { LuDelete } from "react-icons/lu";
-import { BsEmojiSmileUpsideDown } from "react-icons/bs";
+import { GoTrash } from "react-icons/go";
+import { CiCircleMinus, CiCirclePlus } from "react-icons/ci";
+import { FaShopify } from "react-icons/fa";
 
 export default function ProductCart() {
   const dispatch = useDispatch();
+  const userId = JSON.parse(localStorage.getItem("userId") || "null");
+  const [refresh, setRefresh] = useState(false);
   const cartItems = useSelector((state: any) => state.cart.items);
   const theme = useSelector((state: any) => state.theme.theme);
-  // const userId = JSON.parse(localStorage.getItem("userId") || "null");
   const [products, setProducts] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(
-    null
-  );
-
-  console.log("Cart Items:", cartItems);
 
   useEffect(() => {
     const fetchProducts = async () => {
-      setLoading(true);
-      try {
-        const productIds = Object.keys(cartItems);
-        console.log("Product IDs:", productIds);
-        if (productIds.length === 0) {
-          setProducts([]);
-          setLoading(false);
-          return;
-        }
+      if (userId) {
+        try {
+          const cartDocRef = doc(db, "cart", userId);
+          const cartDocSnap = await getDoc(cartDocRef);
+          if (cartDocSnap.exists()) {
+            const cartData = cartDocSnap.data();
+            const cartProductIds = Object.keys(cartData);
 
-        const fetchedProducts: Recipe[] = [];
-        for (const id of productIds) {
-          const productRef = doc(db, "recipe", id);
-          const productDoc = await getDoc(productRef);
-          if (productDoc.exists()) {
-            const productData = productDoc.data();
-            fetchedProducts.push({
-              id: productDoc.id,
-              title: productData.title,
-              cookingTime: productData.cookingTime,
-              ingredients: productData.ingredients || [],
-              imageURLs: productData.imageURLs || [],
-              method: productData.method,
-              nation: productData.nation,
-              price: productData.price || 0,
-            } as Recipe);
-          } else {
-            console.warn(`Product with id ${id} not found`);
+            const productPromises = cartProductIds.map(async (id) => {
+              const productDocRef = doc(db, "recipe", id);
+              const productDocSnap = await getDoc(productDocRef);
+              if (productDocSnap.exists()) {
+                return {
+                  id: productDocSnap.id,
+                  ...productDocSnap.data(),
+                } as Recipe;
+              }
+              return null;
+            });
+
+            const products = await Promise.all(productPromises);
+            setProducts(
+              products.filter((product) => product !== null) as Recipe[]
+            );
+            dispatch(setCartItems(cartData));
           }
+        } catch (error) {
+          console.error("mahsulot olib kelishda xatolik: ", error);
         }
-        setProducts(fetchedProducts);
-      } catch (error) {
-        console.error("Error fetching products: ", error);
-        toast.error("Error fetching products");
-      } finally {
-        setLoading(false);
       }
+      setLoading(false);
     };
 
     fetchProducts();
-  }, [cartItems]);
+  }, [userId, dispatch, refresh]);
 
-  const handleIncrement = (productId: string) => {
-    dispatch(incrementCount(productId));
-  };
-
-  const handleDecrement = (productId: string) => {
-    dispatch(decrementCount(productId));
-  };
-
-  const handleDelete = (productId: string) => {
-    setSelectedProductId(productId);
-    setShowConfirm(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (selectedProductId) {
+  const handleRemove = async (productId: string) => {
+    if (userId) {
       try {
-        dispatch(deleteCart(selectedProductId));
-        toast.info("Product removed from cart");
-        setShowConfirm(false);
+        const cartDocRef = doc(db, "cart", userId);
+        await updateDoc(cartDocRef, {
+          [productId]: deleteField(),
+        });
+        dispatch(deleteCart(productId));
+        toast.success("Product removed from cart!");
+        setRefresh(!refresh);
       } catch (error) {
-        console.error("Error removing item from cart: ", error);
-        toast.error("Error removing product from cart");
+        console.error("mahsulot o'chirishdagi xatolik: ", error);
+        toast.info("Product removed from cart!");
+        setRefresh(!refresh);
       }
     }
   };
 
-  const handleCancelDelete = () => {
-    setShowConfirm(false);
-    setSelectedProductId(null);
+  const handleDelete = (productId: string) => {
+    handleRemove(productId);
+  };
+
+  const Increment = async (productId: string) => {
+    dispatch(incrementCount(productId));
+
+    if (userId) {
+      const cartDocRef = doc(db, "cart", userId);
+      const cartDocSnap = await getDoc(cartDocRef);
+      if (cartDocSnap.exists()) {
+        const cartData = cartDocSnap.data();
+        if (cartData[productId]) {
+          cartData[productId].count += 1;
+          await updateDoc(cartDocRef, {
+            [productId]: cartData[productId],
+          });
+        }
+      }
+    }
+  };
+
+  const Decrement = async (productId: string) => {
+    dispatch(decrementCount(productId));
+
+    if (userId) {
+      const cartDocRef = doc(db, "cart", userId);
+      const cartDocSnap = await getDoc(cartDocRef);
+      if (cartDocSnap.exists()) {
+        const cartData = cartDocSnap.data();
+        if (cartData[productId]) {
+          if (cartData[productId].count > 1) {
+            cartData[productId].count -= 1;
+            await updateDoc(cartDocRef, {
+              [productId]: cartData[productId],
+            });
+          } else {
+            await updateDoc(cartDocRef, {
+              [productId]: deleteField(),
+            });
+            dispatch(deleteCart(productId));
+          }
+        }
+      }
+    }
   };
 
   if (loading) {
@@ -110,103 +139,95 @@ export default function ProductCart() {
 
   return (
     <div className="container mx-auto p-4">
-      <h2 className="text-center mt-5 mb-8 font-bold text-2xl">Your Cart</h2>
+      <h2 className="text-center mt-5 mb-8 font-bold text-2xl">
+        Shopping Cart
+      </h2>
       {products.length === 0 ? (
-        <div className="text-center text-xl">
-          <BsEmojiSmileUpsideDown className="mx-auto mb-4 text-4xl" />
-          <p>Your cart is empty!</p>
+        <div className="flex items-center justify-center gap-6 text-center text-lg font-semibold mt-20">
+          <FaShopify style={{ zoom: 6 }} />
+          Your cart is empty
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
-          {products.map((product) => (
-            <div
-              key={product.id}
-              className={
-                theme === "synthwave"
-                  ? "bg-base-300 rounded-lg shadow-md overflow-hidden"
-                  : "bg-base-100 rounded-lg shadow-md overflow-hidden"
-              }
-            >
-              <div className="flex flex-col p-4">
-                <div className="flex items-center">
-                  <h2 className="text-xl font-bold mb-2 mr-auto">
-                    {product.title}
-                  </h2>
-                  <LuDelete
-                    style={{ zoom: 2 }}
-                    onClick={() => handleDelete(product.id)}
-                    className="cursor-pointer text-gray-700 hover:text-red-500 transition-colors duration-300"
+        <div className="flex flex-col md:flex-row justify-between">
+          <div className="flex-1">
+            {products.map((product) => (
+              <div
+                key={product.id}
+                className={
+                  theme === "synthwave"
+                    ? " flex flex-col md:flex-row w-full md:w-[780px] rounded shadow-md mb-4 bg-base-200 "
+                    : " flex flex-col md:flex-row w-full md:w-[780px] rounded shadow-md mb-4 bg-base-100"
+                }
+              >
+                <div className="flex items-center gap-2 p-2">
+                  <input
+                    type="checkbox"
+                    className="checkbox checkbox-info border-2"
                   />
-                </div>
-                <p className="text-gray-700 font-semibold">
-                  Method: {product.method.slice(0, 35)}...
-                </p>
-                <p className="text-gray-700 font-semibold">
-                  Price: ${product.price?.toFixed(2)}
-                </p>
-                <div className="flex items-start mt-[4px] gap-y-2">
-                  <p className="mr-auto text-white bg-green-500 rounded-xl p-1">
-                    {product.cookingTime} minutes
-                  </p>
-                  <div className="flex items-center">
-                    <button
-                      onClick={() => handleIncrement(product.id)}
-                      className="bg-green-500 text-white px-3 py-1 rounded-l"
-                    >
-                      +
-                    </button>
-                    <span className="bg-gray-300 text-gray-700 px-3 py-1">
-                      {cartItems[product.id]?.count || 0}
-                    </span>
-                    <button
-                      onClick={() => handleDecrement(product.id)}
-                      className="bg-red-500 text-white px-3 py-1 rounded-r"
-                    >
-                      -
-                    </button>
-                  </div>
-                </div>
-              </div>
-              {product.imageURLs && product.imageURLs.length > 0 && (
-                <div className="w-full h-[280px]">
                   <img
                     src={product.imageURLs[0]}
                     alt={product.title}
-                    className="object-cover w-full h-full"
+                    className="w-24 h-24 object-cover rounded-md sm:w-24 sm:h-24 md:w-30 md:h-24"
                   />
                 </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-      {showConfirm && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div
-            className={
-              theme === "synthwave"
-                ? "flex flex-col items-center bg-gray-700 text-white p-6 rounded-lg shadow-lg max-w-sm w-full"
-                : "flex flex-col items-center bg-white text-gray-700 font-semibold p-6 rounded-lg shadow-lg max-w-sm w-full"
-            }
-          >
-            <h3 className="text-lg font-semibold mb-4">Are you sure?</h3>
-            <div className="flex justify-end gap-4">
-              <button
-                onClick={handleCancelDelete}
-                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmDelete}
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-              >
-                Delete
-              </button>
-            </div>
+                <div className="flex flex-col flex-1">
+                  <div className="flex justify-between mt-2 p-2">
+                    <h2 className="text-xl font-bold mb-2">{product.title}</h2>
+                    <div className="flex items-center">
+                      <CiCircleMinus
+                        onClick={() => Decrement(product.id)}
+                        className="text-gray-blue hover:text-blue-600 hover:scale-110 transition-transform duration-300"
+                        style={{ zoom: 1.7 }}
+                      />
+                      <span className="mx-4 text-lg font-semibold text-blue-500">
+                        {cartItems[product.id]?.count || 1}
+                      </span>
+                      <CiCirclePlus
+                        onClick={() => Increment(product.id)}
+                        style={{ zoom: 1.7 }}
+                        className="text-gray-blue hover:text-blue-600 hover:scale-110 transition-transform duration-300"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-between p-2">
+                    <p className="text-blue-500 font-semibold">
+                      $ {product.price.toFixed(2)}
+                    </p>
+                    <GoTrash
+                      onClick={() => handleDelete(product.id)}
+                      className="cursor-pointer text-blue-700 hover:text-blue-700 transition-colors duration-300"
+                      size={24}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
+          {Object.keys(cartItems).length > 0 && (
+            <div
+              className={
+                theme === "synthwave"
+                  ? "flex flex-col bg-base-200 p-4 rounded shadow-md max-w-[350px] w-full h-[350px] mt-4 md:mt-0"
+                  : "flex flex-col bg-base-100 p-4 rounded shadow-md max-w-[350px] w-full h-[350px] mt-4 md:mt-0"
+              }
+            >
+              <h3 className="text-xl font-bold mb-4">Order Summary</h3>
+              <div className="flex justify-between font-semibold mb-2">
+                <span>Total Items:</span>
+                <span>{Object.keys(cartItems).length}</span>
+              </div>
+              <div className="flex justify-between mb-auto font-semibold ">
+                <span>Total Price:</span>
+                <span>$ {products.map((p) => p.price)}</span>
+              </div>
+              <button className="bg-blue-500 text-white p-2 rounded w-full mt-4">
+                Checkout
+              </button>
+            </div>
+          )}
         </div>
       )}
+
       <ToastContainer />
     </div>
   );

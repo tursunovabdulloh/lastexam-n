@@ -2,15 +2,43 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../store/userSlice";
 import { toggleTheme } from "../store/themeSlice";
+import { db } from "../firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { useEffect, useState } from "react";
 
 export default function Header() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const userId = JSON.parse(localStorage.getItem("userId") || "null");
   const user = useSelector((state: any) => state.user.user);
   const Theme = useSelector((state: any) => state.theme.theme);
-  const cartItems = useSelector((state: any) => state.cart.items);
+  const [cartLength, setCartLength] = useState<number>(0);
 
   const userRasm = localStorage.getItem("rasm");
+
+  useEffect(() => {
+    const CartLength = async () => {
+      if (userId) {
+        try {
+          const docRef = doc(db, "cart", userId);
+          const docSnap = await getDoc(docRef);
+
+          if (docSnap.exists()) {
+            const cartData = docSnap.data();
+            const length = Object.keys(cartData).length;
+            setCartLength(length);
+          } else {
+            setCartLength(0);
+          }
+        } catch (error) {
+          console.error("xato: ", error);
+          setCartLength(0);
+        }
+      }
+    };
+
+    CartLength();
+  }, [userId, cartLength]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -44,7 +72,6 @@ export default function Header() {
               onChange={ToggleTheme}
               value="synthwave"
             />
-
             <svg
               className="swap-off h-9 w-9 fill-current"
               xmlns="http://www.w3.org/2000/svg"
@@ -52,7 +79,6 @@ export default function Header() {
             >
               <path d="M5.64,17l-.71.71a1,1,0,0,0,0,1.41,1,1,0,0,0,1.41,0l.71-.71A1,1,0,0,0,5.64,17ZM5,12a1,1,0,0,0-1-1H3a1,1,0,0,0,0,2H4A1,1,0,0,0,5,12Zm7-7a1,1,0,0,0,1-1V3a1,1,0,0,0-2,0V4A1,1,0,0,0,12,5ZM5.64,7.05a1,1,0,0,0,.7.29,1,1,0,0,0,.71-.29,1,1,0,0,0,0-1.41l-.71-.71A1,1,0,0,0,4.93,6.34Zm12,.29a1,1,0,0,0,.7-.29l.71-.71a1,1,0,1,0-1.41-1.41L17,5.64a1,1,0,0,0,0,1.41A1,1,0,0,0,17.66,7.34ZM21,11H20a1,1,0,0,0,0,2h1a1,1,0,0,0,0-2Zm-9,8a1,1,0,0,0-1,1v1a1,1,0,0,0,2,0V20A1,1,0,0,0,12,19ZM18.36,17A1,1,0,0,0,17,18.36l.71.71a1,1,0,0,0,1.41,0,1,1,0,0,0,0-1.41ZM12,6.5A5.5,5.5,0,1,0,17.5,12,5.51,5.51,0,0,0,12,6.5Zm0,9A3.5,3.5,0,1,1,15.5,12,3.5,3.5,0,0,1,12,15.5Z" />
             </svg>
-
             <svg
               className="swap-on h-9 w-8 fill-current"
               xmlns="http://www.w3.org/2000/svg"
@@ -84,7 +110,7 @@ export default function Header() {
                   />
                 </svg>
                 <span className="badge badge-sm indicator-item">
-                  {cartItems.length}
+                  {cartLength}
                 </span>
               </div>
             </div>
@@ -93,9 +119,7 @@ export default function Header() {
               className="card card-compact dropdown-content bg-base-100 z-[1] mt-3 w-52 shadow"
             >
               <div className="card-body bg-base-300 rounded-lg">
-                <span className="text-lg font-bold">
-                  {cartItems.length} Items
-                </span>
+                <span className="text-lg font-bold">{cartLength} Items</span>
                 <div className="card-actions">
                   <button className="btn btn-info btn-block min-h-0 h-8">
                     <a href="/productcart">View cart</a>

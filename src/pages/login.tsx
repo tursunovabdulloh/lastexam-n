@@ -104,18 +104,15 @@ function Login() {
       dispatch(login(user));
 
       localStorage.setItem("user", JSON.stringify(user.providerData));
-      localStorage.setItem(
-        "rasm",
-        user.providerData[0]?.photoURL || "/default-avatar.png"
-      );
+      localStorage.setItem("rasm", user.providerData[0]?.photoURL || "");
       localStorage.setItem("userData", JSON.stringify(userCredential.user));
 
       toast.success("Successfully logged in!");
 
       navigate("/");
     } catch (error) {
-      console.error("Error signing in with password and email", error);
       toast.error("Invalid email or password.");
+      console.error("Error signing in with password and email", error);
     }
   };
 
