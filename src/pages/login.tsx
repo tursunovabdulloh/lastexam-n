@@ -60,23 +60,20 @@ function Login() {
       const req = await signInWithPopup(auth, provider);
       const fUser = req.user;
 
-      console.log("Logged in user:", fUser);
+      console.log("firebase user:", fUser);
       localStorage.setItem("userId", JSON.stringify(fUser.uid));
       const user = mapFirebaseUserToUser(fUser);
       dispatch(login(user));
 
       localStorage.setItem("user", JSON.stringify(user.providerData));
-      localStorage.setItem(
-        "rasm",
-        user.providerData[0]?.photoURL || "/default-avatar.png"
-      );
+      localStorage.setItem("rasm", user.providerData[0]?.photoURL || "");
       localStorage.setItem("userData", JSON.stringify(fUser));
 
       toast.success("Successfully logged in with Google!");
 
       navigate("/");
     } catch (error) {
-      console.error("Error signing in with Google", error);
+      console.error("xatolik", error);
       toast.error("Failed to sign in with Google.");
     }
   };
@@ -98,7 +95,7 @@ function Login() {
 
       const firebaseUser = userCredential.user;
 
-      console.log("Logged in user:", firebaseUser);
+      console.log("user kirdi:", firebaseUser);
       localStorage.setItem("userId", JSON.stringify(userCredential.user.uid));
       const user = mapFirebaseUserToUser(firebaseUser);
       dispatch(login(user));
@@ -112,7 +109,7 @@ function Login() {
       navigate("/");
     } catch (error) {
       toast.error("Invalid email or password.");
-      console.error("Error signing in with password and email", error);
+      console.error("xatolik", error);
     }
   };
 

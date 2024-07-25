@@ -44,7 +44,7 @@ function Signup() {
         providerData: fUser.providerData || [],
         stsTokenManager: {},
         username: fUser.displayName || "",
-        photoUrl: fUser.photoURL || "/default-avatar.png",
+        photoUrl: fUser.photoURL || "",
       };
 
       await setDoc(doc(db, "users", fUser.uid), user);
@@ -56,7 +56,7 @@ function Signup() {
 
       navigate("/");
     } catch (error) {
-      console.error("Error signing up with Google:", error);
+      console.error("xatolik:", error);
     } finally {
       setLoading(false);
     }
@@ -105,7 +105,7 @@ function Signup() {
 
       navigate("/");
     } catch (error) {
-      console.error("Error signing up:", error);
+      console.error("xatolik signing up:", error);
     } finally {
       setLoading(false);
     }
