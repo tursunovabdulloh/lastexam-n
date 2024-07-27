@@ -10,7 +10,7 @@ export default function Header() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const userId = JSON.parse(localStorage.getItem("userId") || "null");
-  const user = useSelector((state: any) => state.user.user);
+  // const user = useSelector((state: any) => state.user.user);
   const Theme = useSelector((state: any) => state.theme.theme);
   const [cartLength, setCartLength] = useState<number>(0);
 
