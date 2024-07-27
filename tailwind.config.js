@@ -7,7 +7,17 @@ export default {
   ],
 
   theme: {
-    extend: {},
+    extend: {
+      transform: {
+        "rotate-y-360": "rotateY(360deg)",
+      },
+      perspective: {
+        1000: "1px",
+      },
+      scale: {
+        110: "1.1",
+      },
+    },
   },
   plugins: [require("daisyui")],
   daisyui: {

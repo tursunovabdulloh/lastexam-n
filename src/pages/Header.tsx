@@ -150,10 +150,7 @@ export default function Header() {
               className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
             >
               <li>
-                <a className="justify-between">
-                  {user?.username || "Profile"}
-                  {user?.isNew && <span className="badge">New</span>}
-                </a>
+                <a href="/profile">Profile</a>
               </li>
               <li>
                 <a href="/addproduct">Create recipe</a>

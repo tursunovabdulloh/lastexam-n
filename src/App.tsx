@@ -10,6 +10,7 @@ import ProductDetail from "./pages/ProductDetail";
 import Login from "./pages/login";
 import Signup from "./pages/SignUp";
 import ProductCart from "./pages/productCart";
+import Profile from "./pages/Profile";
 import ApexChart from "./pages/ApexChart";
 import { useSelector } from "react-redux";
 
@@ -49,6 +50,10 @@ export default function App() {
         {
           path: "/addproduct",
           element: <AddProduct />,
+        },
+        {
+          path: "/profile",
+          element: <Profile />,
         },
         {
           path: "/recipes/:id",
