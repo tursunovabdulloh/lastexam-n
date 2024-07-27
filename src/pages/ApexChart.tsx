@@ -8,6 +8,8 @@ import { useNavigate } from "react-router-dom";
 const ApexChart = () => {
   const [chartLabels, setChartLabels] = useState<string[]>([]);
   const [chartSeries, setChartSeries] = useState<number[]>([]);
+  const [timeChartLabels, setTimeChartLabels] = useState<string[]>([]);
+  const [timeChartSeries, setTimeChartSeries] = useState<number[]>([]);
   const theme = useSelector((state: any) => state.theme.theme);
   const navigate = useNavigate();
 
@@ -18,6 +20,8 @@ const ApexChart = () => {
         const products = querySnapshot.docs.map((doc) => {
           const data = doc.data();
           return {
+            title: data.title,
+            cookingTime: data.cookingTime || 0,
             nation: data.nation,
           };
         });
@@ -34,6 +38,14 @@ const ApexChart = () => {
 
         setChartLabels(Object.keys(nationalityCounts));
         setChartSeries(Object.values(nationalityCounts));
+
+        const sortedProducts = products.sort(
+          (a, b) => a.cookingTime - b.cookingTime
+        );
+        setTimeChartLabels(sortedProducts.map((product) => product.title));
+        setTimeChartSeries(
+          sortedProducts.map((product) => product.cookingTime)
+        );
       } catch (error) {
         console.error("Error fetching data: ", error);
       }
@@ -65,6 +77,46 @@ const ApexChart = () => {
     },
   };
 
+  const timeChartOptions: ApexCharts.ApexOptions = {
+    chart: {
+      type: "bar",
+    },
+    xaxis: {
+      categories: timeChartLabels,
+      title: {
+        text: "Recipe Title",
+        style: {
+          color: theme === "synthwave" ? "#FFFFFF" : "#000000",
+        },
+      },
+    },
+    yaxis: {
+      title: {
+        text: "Cooking Time (minutes)",
+        style: {
+          color: theme === "synthwave" ? "#FFFFFF" : "#000000",
+        },
+      },
+    },
+    title: {
+      text: "Cooking Time Distribution",
+      style: {
+        color: theme === "synthwave" ? "#FFFFFF" : "#000000",
+      },
+    },
+    plotOptions: {
+      bar: {
+        horizontal: false,
+        columnWidth: "55%",
+      },
+    },
+    dataLabels: {
+      style: {
+        colors: [theme === "synthwave" ? "#FFFFFF" : "#000000"],
+      },
+    },
+  };
+
   return (
     <div className="container p-10">
       <div className="chart">
@@ -75,8 +127,16 @@ const ApexChart = () => {
           height={350}
         />
       </div>
+      <div className="chart mt-10">
+        <ApexCharts
+          options={timeChartOptions}
+          series={[{ name: "Cooking Time", data: timeChartSeries }]}
+          type="bar"
+          height={350}
+        />
+      </div>
       <button
-        className="bg-green-500 text-white px-4 py-2 rounded-lg shadow hover:bg-green-600 transition"
+        className="bg-green-500 text-white px-4 py-2 rounded-lg shadow hover:bg-green-600 transition mt-5"
         onClick={() => navigate("/")}
       >
         Back
