@@ -1,8 +1,14 @@
 import { useSelector } from "react-redux";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function Profile() {
   const theme = useSelector((state: any) => state.theme.theme);
   const user = JSON.parse(localStorage.getItem("userData") || "{}");
+
+  const edit = () => {
+    toast.info("As soon as this method is being!");
+  };
 
   return (
     <div
@@ -45,13 +51,17 @@ function Profile() {
               <div className="w-full h-4 bg-green-500 rounded-full"></div>
             </div>
             <div className="mt-4 flex justify-center md:justify-end">
-              <button className="py-2 px-4 bg-purple-600 text-white rounded-lg shadow-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-150 ease-in-out">
+              <button
+                onClick={edit}
+                className="py-2 px-4 cursor-pointer bg-purple-600 text-white rounded-lg shadow-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-150 ease-in-out"
+              >
                 Edit Profile
               </button>
             </div>
           </div>
         </div>
       </div>
+      <ToastContainer />
     </div>
   );
 }

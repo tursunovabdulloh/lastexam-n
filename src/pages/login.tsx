@@ -11,7 +11,7 @@ import { auth } from "../firebase";
 import { useDispatch } from "react-redux";
 import { login } from "../store/userSlice";
 import { LoginUser } from "../types";
-import { toast } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
 import background from "../../public/premium_photo.jfif";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -48,11 +48,23 @@ const mapFirebaseUserToUser = (firebaseUser: FirebaseUser): LoginUser => {
 
 function Login() {
   const navigate = useNavigate();
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const dispatch = useDispatch();
   const [logindata, setLoginData] = useState<LoginData>({
     email: "",
     password: "",
   });
+
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    if (!logindata.email) newErrors.email = "0";
+    else if (!/\S+@\S+\.\S+/.test(logindata.email)) newErrors.email = "0";
+    if (!logindata.password) newErrors.password = "0";
+    else if (logindata.password.length < 6) newErrors.password = "0";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleGoogle = async () => {
     try {
@@ -81,8 +93,8 @@ function Login() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!logindata.email || !logindata.password) {
-      toast.error("Please fill out all fields.");
+    if (!validate()) {
+      toast.error("Please fill out all fields correctly.");
       return;
     }
 
@@ -116,6 +128,7 @@ function Login() {
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setLoginData({ ...logindata, [name]: value });
+    validate();
   };
 
   return (
@@ -129,7 +142,7 @@ function Login() {
       className="flex justify-center items-center min-h-screen p-4"
     >
       <div className="w-full max-w-md bg-[#ffffff58] shadow-lg p-6 rounded-lg">
-        <h2 className="text-2xl sm:text-3xl font-bold  text-gray-800 mb-8">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-8">
           Login
         </h2>
         <form className="flex flex-col space-y-4" onSubmit={handleSubmit}>
@@ -138,7 +151,11 @@ function Login() {
             <input
               type="email"
               name="email"
-              className="w-full h-12 px-4 border border-gray-300 rounded-lg shadow-sm outline-none focus:ring-2 focus:ring-blue-500 transition duration-150 ease-in-out"
+              className={`w-full h-12 px-4 border border-gray-300 rounded-lg shadow-sm outline-none focus:ring-2 ${
+                errors.email
+                  ? "border-red-500 focus:ring-red-500"
+                  : "focus:ring-blue-500"
+              }`}
               value={logindata.email}
               onChange={handleChange}
             />
@@ -150,7 +167,11 @@ function Login() {
             <input
               type="password"
               name="password"
-              className="w-full h-12 px-4 border border-gray-300 rounded-lg shadow-sm outline-none focus:ring-2 focus:ring-blue-500 transition duration-150 ease-in-out"
+              className={`w-full h-12 px-4 border border-gray-300 rounded-lg shadow-sm outline-none focus:ring-2 ${
+                errors.password
+                  ? "border-red-500 focus:ring-red-500"
+                  : "focus:ring-blue-500"
+              }`}
               value={logindata.password}
               onChange={handleChange}
             />
@@ -176,6 +197,7 @@ function Login() {
           </div>
         </form>
       </div>
+      <ToastContainer />
     </div>
   );
 }

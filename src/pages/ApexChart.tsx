@@ -62,6 +62,8 @@ const ApexChart = () => {
     title: {
       text: "Food Distribution by Nationality",
       style: {
+        fontSize: "16px",
+        fontFamily: "Arial, sans-serif",
         color: theme === "synthwave" ? "#FFFFFF" : "#000000",
       },
     },
@@ -75,6 +77,12 @@ const ApexChart = () => {
         colors: [theme === "synthwave" ? "#FFFFFF" : "#000000"],
       },
     },
+    tooltip: {
+      style: {
+        fontSize: "14px",
+        fontFamily: "Arial, sans-serif",
+      },
+    },
   };
 
   const timeChartOptions: ApexCharts.ApexOptions = {
@@ -86,7 +94,14 @@ const ApexChart = () => {
       title: {
         text: "Recipe Title",
         style: {
+          fontSize: "16px",
+          fontFamily: "Arial, sans-serif",
           color: theme === "synthwave" ? "#FFFFFF" : "#000000",
+        },
+      },
+      labels: {
+        style: {
+          colors: theme === "synthwave" ? "#FFFFFF" : "#000000",
         },
       },
     },
@@ -94,13 +109,22 @@ const ApexChart = () => {
       title: {
         text: "Cooking Time (minutes)",
         style: {
+          fontSize: "16px",
+          fontFamily: "Arial, sans-serif",
           color: theme === "synthwave" ? "#FFFFFF" : "#000000",
+        },
+      },
+      labels: {
+        style: {
+          colors: theme === "synthwave" ? "#FFFFFF" : "#000000",
         },
       },
     },
     title: {
       text: "Cooking Time Distribution",
       style: {
+        fontSize: "16px",
+        fontFamily: "Arial, sans-serif",
         color: theme === "synthwave" ? "#FFFFFF" : "#000000",
       },
     },
@@ -115,10 +139,16 @@ const ApexChart = () => {
         colors: [theme === "synthwave" ? "#FFFFFF" : "#000000"],
       },
     },
+    tooltip: {
+      style: {
+        fontSize: "14px",
+        fontFamily: "Arial, sans-serif",
+      },
+    },
   };
 
   return (
-    <div className="container p-10">
+    <div className="container p-8">
       <div className="chart">
         <ApexCharts
           options={chartOptions}

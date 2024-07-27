@@ -5,7 +5,12 @@ export default function Footer() {
         <aside>
           <p>
             Copyright © {new Date().getFullYear()} - All right reserved by {""}
-            <a href="">Abdulloh Tursunov</a>
+            <a
+              href="https://t.me/Abdulloh_Tursunov"
+              className="font-bold text-info hover:text-blue-500"
+            >
+              Abdulloh Tursunov
+            </a>
           </p>
         </aside>
       </footer>

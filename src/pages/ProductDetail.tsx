@@ -27,11 +27,11 @@ export default function ProductDetail() {
           if (docSnap.exists()) {
             setRecipe(docSnap.data() as Recipe);
           } else {
-            console.log("No such document!");
+            console.log("maxsulot kelmadi!");
             toast.error("Recipe not found.");
           }
         } catch (error) {
-          console.error("Error fetching recipe: ", error);
+          console.error("mahsulotda xatolik: ", error);
           toast.error("Error fetching recipe.");
         }
       }
@@ -45,7 +45,7 @@ export default function ProductDetail() {
     e.stopPropagation();
 
     if (!recipe || !recipe.id) {
-      console.error("Recipe ID is missing");
+      console.error(" id da xatolik");
       return;
     }
 
@@ -68,7 +68,7 @@ export default function ProductDetail() {
             await setDoc(cartDocRef, cartData);
           }
         } catch (error) {
-          console.error("Error removing item from cart: ", error);
+          console.error("cart bilan xato ", error);
           toast.error("Error removing item from cart.");
         }
       }
@@ -96,7 +96,7 @@ export default function ProductDetail() {
             });
           }
         } catch (error) {
-          console.error("Error adding item to cart: ", error);
+          console.error("xato: ", error);
           toast.error("Error adding item to cart.");
         }
       }
@@ -129,13 +129,13 @@ export default function ProductDetail() {
             {recipe.imageURLs && recipe.imageURLs.length > 0 ? (
               recipe.imageURLs.map((url, index) => (
                 <div
-                  className="carousel-item flex-shrink-0 w-full sm:w-[600px] h-[400px] sm:h-[400px]"
+                  className="carousel-item flex-shrink-0 w-full sm:w-[500px] h-[400px] sm:h-[400px]"
                   key={index}
                 >
                   <img
                     src={url}
                     alt={`Recipe image ${index}`}
-                    className="w-[600px] h-[320px] object-cover rounded-box"
+                    className="w-[500px] h-[320px] object-cover rounded-box"
                   />
                 </div>
               ))

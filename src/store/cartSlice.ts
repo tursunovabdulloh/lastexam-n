@@ -7,12 +7,12 @@ interface CartItem {
 
 interface CartState {
   items: { [key: string]: CartItem };
-  selectedItems: Set<string>;
+  selectedItems: string[];
 }
 
 const initialState: CartState = {
   items: {},
-  selectedItems: new Set(),
+  selectedItems: [],
 };
 
 const cartSlice = createSlice({
@@ -27,12 +27,14 @@ const cartSlice = createSlice({
       if (state.items[item.id]) {
         state.items[item.id].count += item.count;
       } else {
-        state.items[item.id] = { ...item, count: 1 };
+        state.items[item.id] = { ...item, count: +1 };
       }
     },
     deleteCart(state, action: PayloadAction<string>) {
       delete state.items[action.payload];
-      state.selectedItems.delete(action.payload);
+      state.selectedItems = state.selectedItems.filter(
+        (id) => id !== action.payload
+      );
     },
     incrementCount(state, action: PayloadAction<string>) {
       const item = state.items[action.payload];
@@ -47,15 +49,21 @@ const cartSlice = createSlice({
           item.count -= 1;
         } else {
           delete state.items[action.payload];
-          state.selectedItems.delete(action.payload);
+          state.selectedItems = state.selectedItems.filter(
+            (id) => id !== action.payload
+          );
         }
       }
     },
     selectItem(state, action: PayloadAction<string>) {
-      state.selectedItems.add(action.payload);
+      if (!state.selectedItems.includes(action.payload)) {
+        state.selectedItems.push(action.payload);
+      }
     },
     deselectItem(state, action: PayloadAction<string>) {
-      state.selectedItems.delete(action.payload);
+      state.selectedItems = state.selectedItems.filter(
+        (id) => id !== action.payload
+      );
     },
   },
 });

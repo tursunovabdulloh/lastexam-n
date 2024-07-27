@@ -3,13 +3,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { doc, updateDoc, deleteField, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import {
+  incrementCount,
   decrementCount,
   deleteCart,
-  incrementCount,
   setCartItems,
 } from "../store/cartSlice";
 import { Recipe } from "../types";
-import { toast, ToastContainer } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { GoTrash } from "react-icons/go";
 import { CiCircleMinus, CiCirclePlus } from "react-icons/ci";
@@ -47,13 +47,24 @@ export default function ProductCart() {
             });
 
             const products = await Promise.all(productPromises);
-            setProducts(
-              products.filter((product) => product !== null) as Recipe[]
+
+            const validProducts = products.filter(
+              (product): product is Recipe => product !== null
             );
-            dispatch(setCartItems(cartData));
+
+            setProducts(validProducts);
+
+            dispatch(
+              setCartItems(
+                validProducts.reduce((acc, product) => {
+                  acc[product.id] = { id: product.id, count: 1 };
+                  return acc;
+                }, {} as { [key: string]: any })
+              )
+            );
           }
         } catch (error) {
-          console.error("mahsulot olib kelishda xatolik: ", error);
+          console.error("xato", error);
         }
       }
       setLoading(false);
@@ -70,11 +81,11 @@ export default function ProductCart() {
           [productId]: deleteField(),
         });
         dispatch(deleteCart(productId));
-        toast.success("Product removed from cart!");
+        toast.info("Product removed from cart!");
         setRefresh(!refresh);
       } catch (error) {
-        console.error("mahsulot o'chirishdagi xatolik: ", error);
-        toast.info("Product removed from cart!");
+        console.error("xato", error);
+        toast.error("Failed to remove product!");
         setRefresh(!refresh);
       }
     }
@@ -84,47 +95,21 @@ export default function ProductCart() {
     handleRemove(productId);
   };
 
-  const Increment = async (productId: string) => {
+  const Increment = (productId: string) => {
     dispatch(incrementCount(productId));
-
-    if (userId) {
-      const cartDocRef = doc(db, "cart", userId);
-      const cartDocSnap = await getDoc(cartDocRef);
-      if (cartDocSnap.exists()) {
-        const cartData = cartDocSnap.data();
-        if (cartData[productId]) {
-          cartData[productId].count += 1;
-          await updateDoc(cartDocRef, {
-            [productId]: cartData[productId],
-          });
-        }
-      }
-    }
   };
 
-  const Decrement = async (productId: string) => {
+  const Decrement = (productId: string) => {
     dispatch(decrementCount(productId));
+  };
 
-    if (userId) {
-      const cartDocRef = doc(db, "cart", userId);
-      const cartDocSnap = await getDoc(cartDocRef);
-      if (cartDocSnap.exists()) {
-        const cartData = cartDocSnap.data();
-        if (cartData[productId]) {
-          if (cartData[productId].count > 1) {
-            cartData[productId].count -= 1;
-            await updateDoc(cartDocRef, {
-              [productId]: cartData[productId],
-            });
-          } else {
-            await updateDoc(cartDocRef, {
-              [productId]: deleteField(),
-            });
-            dispatch(deleteCart(productId));
-          }
-        }
-      }
-    }
+  const totalPrice = () => {
+    return products
+      .reduce((total, product) => {
+        const count = cartItems[product.id]?.count || 1;
+        return total + product.price * count;
+      }, 0)
+      .toFixed(2);
   };
 
   if (loading) {
@@ -173,20 +158,29 @@ export default function ProductCart() {
                 <div className="flex flex-col flex-1">
                   <div className="flex justify-between mt-2 p-2">
                     <h2 className="text-xl font-bold mb-2">{product.title}</h2>
-                    <div className="flex items-center">
-                      <CiCircleMinus
-                        onClick={() => Decrement(product.id)}
-                        className="text-gray-blue hover:text-blue-600 hover:scale-110 transition-transform duration-300"
-                        style={{ zoom: 1.7 }}
-                      />
-                      <span className="mx-4 text-lg font-semibold text-blue-500">
-                        {cartItems[product.id]?.count || 1}
-                      </span>
-                      <CiCirclePlus
-                        onClick={() => Increment(product.id)}
-                        style={{ zoom: 1.7 }}
-                        className="text-gray-blue hover:text-blue-600 hover:scale-110 transition-transform duration-300"
-                      />
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center">
+                        <button
+                          onClick={() => Decrement(product.id)}
+                          className={`flex items-center justify-center rounded-full w-[25px] h-[25px] min-h-0 ${
+                            cartItems[product.id]?.count === 1
+                              ? "bg-gray-700 text-gray-400 cursor-not-allowed"
+                              : "bg-gray-300 text-black hover:bg-gray-400"
+                          }`}
+                          disabled={cartItems[product.id]?.count === 1}
+                        >
+                          <CiCircleMinus style={{ zoom: 2 }} size={50} />
+                        </button>
+                        <span className="mx-4 text-lg font-semibold text-blue-500">
+                          {cartItems[product.id]?.count || 1}
+                        </span>
+                        <button
+                          onClick={() => Increment(product.id)}
+                          className="flex items-center justify-center rounded-full w-[25px] h-[25px] min-h-0 bg-gray-300 text-black hover:bg-gray-400"
+                        >
+                          <CiCirclePlus style={{ zoom: 2 }} size={50} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                   <div className="flex justify-between p-2">
@@ -203,7 +197,7 @@ export default function ProductCart() {
               </div>
             ))}
           </div>
-          {Object.keys(cartItems).length > 0 && (
+          {products.length > 0 && (
             <div
               className={
                 theme === "synthwave"
@@ -214,11 +208,11 @@ export default function ProductCart() {
               <h3 className="text-xl font-bold mb-4">Order Summary</h3>
               <div className="flex justify-between font-semibold mb-2">
                 <span>Total Items:</span>
-                <span>{Object.keys(cartItems).length}</span>
+                <span>{products.length}</span>
               </div>
               <div className="flex justify-between mb-auto font-semibold ">
                 <span>Total Price:</span>
-                <span>$ {products.map((p) => p.price)}</span>
+                <span>$ {totalPrice()}</span>
               </div>
               <button className="bg-blue-500 text-white p-2 rounded w-full mt-4">
                 Checkout
@@ -227,7 +221,6 @@ export default function ProductCart() {
           )}
         </div>
       )}
-
       <ToastContainer />
     </div>
   );

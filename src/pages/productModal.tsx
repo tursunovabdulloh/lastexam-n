@@ -28,13 +28,13 @@ const ProductModal: React.FC<PreviewModalProps> = ({ recipe, onClose }) => {
             {recipe.imageURLs.length > 0 ? (
               recipe.imageURLs.map((url, index) => (
                 <div
-                  className="carousel-item flex-shrink-0 w-full sm:w-[600px] h-[400px] sm:h-[400px]"
+                  className="carousel-item flex-shrink-0 w-full sm:w-[500px] h-[400px] sm:h-[400px]"
                   key={index}
                 >
                   <img
                     src={url}
                     alt={`Recipe image ${index}`}
-                    className="w-[600px] h-[320px] object-cover rounded-box"
+                    className="w-[500px] h-[320px] object-cover rounded-box"
                   />
                 </div>
               ))
@@ -116,9 +116,6 @@ const ProductModal: React.FC<PreviewModalProps> = ({ recipe, onClose }) => {
             </span>
           </p>
           <div className="flex justify-end gap-4 mt-4">
-            <button className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition">
-              Add to Cart
-            </button>
             <button
               className="bg-gray-500 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-600 transition"
               onClick={onClose}

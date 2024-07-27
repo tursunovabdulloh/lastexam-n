@@ -13,6 +13,8 @@ import { doc, setDoc } from "firebase/firestore";
 import { SignupData, SignUser } from "../types";
 import { useDispatch } from "react-redux";
 import { login } from "../store/userSlice";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function Signup() {
   const [signupData, setSignupData] = useState<SignupData>({
@@ -22,8 +24,22 @@ function Signup() {
     password: "",
   });
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    if (!signupData.username) newErrors.username = "";
+    if (!signupData.photoUrl) newErrors.photoUrl = "";
+    if (!signupData.email) newErrors.email = "";
+    else if (!/\S+@\S+\.\S+/.test(signupData.email)) newErrors.email = "";
+    if (!signupData.password) newErrors.password = "";
+    else if (signupData.password.length < 6) newErrors.password = "";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleGoogle = async () => {
     setLoading(true);
@@ -56,14 +72,17 @@ function Signup() {
 
       navigate("/");
     } catch (error) {
-      console.error("xatolik:", error);
+      console.error("Error:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleSubmit = async () => {
-    if (!signupData.email || !signupData.password) return;
+    if (!validate()) {
+      toast.error("Please fill out all fields.");
+      return;
+    }
 
     setLoading(true);
 
@@ -105,7 +124,8 @@ function Signup() {
 
       navigate("/");
     } catch (error) {
-      console.error("xatolik signing up:", error);
+      console.error("Error signing up:", error);
+      toast.error("Error signing up. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -147,7 +167,11 @@ function Signup() {
               placeholder="Enter your username"
               value={signupData.username}
               onChange={handleChange}
-              className="w-full h-12 px-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full h-12 px-3 border rounded-lg outline-none focus:ring-2 ${
+                errors.username
+                  ? "border-red-500 focus:ring-red-500"
+                  : "border-gray-300 focus:ring-blue-500"
+              }`}
             />
           </div>
           <div className="mb-4">
@@ -158,7 +182,11 @@ function Signup() {
               placeholder="Enter your photo URL"
               value={signupData.photoUrl}
               onChange={handleChange}
-              className="w-full h-12 px-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full h-12 px-3 border rounded-lg outline-none focus:ring-2 ${
+                errors.photoUrl
+                  ? "border-red-500 focus:ring-red-500"
+                  : "border-gray-300 focus:ring-blue-500"
+              }`}
             />
           </div>
           <div className="mb-4">
@@ -169,7 +197,11 @@ function Signup() {
               placeholder="Enter your email"
               value={signupData.email}
               onChange={handleChange}
-              className="w-full h-12 px-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full h-12 px-3 border rounded-lg outline-none focus:ring-2 ${
+                errors.email
+                  ? "border-red-500 focus:ring-red-500"
+                  : "border-gray-300 focus:ring-blue-500"
+              }`}
             />
           </div>
           <div className="mb-4">
@@ -180,7 +212,11 @@ function Signup() {
               placeholder="Enter your password"
               value={signupData.password}
               onChange={handleChange}
-              className="w-full h-12 px-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full h-12 px-3 border rounded-lg outline-none focus:ring-2 ${
+                errors.password
+                  ? "border-red-500 focus:ring-red-500"
+                  : "border-gray-300 focus:ring-blue-500"
+              }`}
             />
           </div>
           <div className="flex flex-col gap-y-4">
@@ -205,6 +241,7 @@ function Signup() {
           </a>
         </div>
       </div>
+      <ToastContainer />
     </div>
   );
 }
