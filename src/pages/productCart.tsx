@@ -133,18 +133,16 @@ export default function ProductCart() {
           Your cart is empty
         </div>
       ) : (
-        <div className="flex flex-col md:flex-row justify-between">
+        <div className="flex flex-col md:flex-row justify-between gap-6">
           <div className="flex-1">
             {products.map((product) => (
               <div
                 key={product.id}
-                className={
-                  theme === "synthwave"
-                    ? " flex flex-col md:flex-row w-full md:w-[780px] rounded shadow-md mb-4 bg-base-200 "
-                    : " flex flex-col md:flex-row w-full md:w-[780px] rounded shadow-md mb-4 bg-base-100"
-                }
+                className={`flex flex-col md:flex-row w-full rounded shadow-md mb-4 p-4 ${
+                  theme === "synthwave" ? "bg-base-200" : "bg-base-100"
+                }`}
               >
-                <div className="flex items-center gap-2 p-2">
+                <div className="flex items-center gap-2 mb-4 md:mb-0">
                   <input
                     type="checkbox"
                     className="checkbox checkbox-info border-2"
@@ -156,36 +154,34 @@ export default function ProductCart() {
                   />
                 </div>
                 <div className="flex flex-col flex-1">
-                  <div className="flex justify-between mt-2 p-2">
-                    <h2 className="text-xl font-bold mb-2">{product.title}</h2>
+                  <div className="flex justify-between items-center mt-2 p-2">
+                    <h2 className="text-xl font-bold">{product.title}</h2>
                     <div className="flex items-center gap-2">
-                      <div className="flex items-center">
-                        <button
-                          onClick={() => Decrement(product.id)}
-                          className={`flex items-center justify-center rounded-full w-[25px] h-[25px] min-h-0 ${
-                            cartItems[product.id]?.count === 1
-                              ? "bg-gray-700 text-gray-400 cursor-not-allowed"
-                              : "bg-gray-300 text-black hover:bg-gray-400"
-                          }`}
-                          disabled={cartItems[product.id]?.count === 1}
-                        >
-                          <CiCircleMinus style={{ zoom: 2 }} size={50} />
-                        </button>
-                        <span className="mx-4 text-lg font-semibold text-blue-500">
-                          {cartItems[product.id]?.count || 1}
-                        </span>
-                        <button
-                          onClick={() => Increment(product.id)}
-                          className="flex items-center justify-center rounded-full w-[25px] h-[25px] min-h-0 bg-gray-300 text-black hover:bg-gray-400"
-                        >
-                          <CiCirclePlus style={{ zoom: 2 }} size={50} />
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => Decrement(product.id)}
+                        className={`flex items-center justify-center rounded-full w-[25px] h-[25px] min-h-0 ${
+                          cartItems[product.id]?.count === 1
+                            ? "bg-gray-700 text-gray-400 cursor-not-allowed"
+                            : "bg-gray-300 text-black hover:bg-gray-400"
+                        }`}
+                        disabled={cartItems[product.id]?.count === 1}
+                      >
+                        <CiCircleMinus style={{ zoom: 2 }} size={50} />
+                      </button>
+                      <span className="mx-4 text-lg font-semibold text-blue-500">
+                        {cartItems[product.id]?.count || 1}
+                      </span>
+                      <button
+                        onClick={() => Increment(product.id)}
+                        className="flex items-center justify-center rounded-full w-[25px] h-[25px] min-h-0 bg-gray-300 text-black hover:bg-gray-400"
+                      >
+                        <CiCirclePlus style={{ zoom: 2 }} size={50} />
+                      </button>
                     </div>
                   </div>
-                  <div className="flex justify-between p-2">
+                  <div className="flex justify-between items-center p-2">
                     <p className="text-blue-500 font-semibold">
-                      $ {product.price.toFixed(2)}
+                      ${product.price.toFixed(2)}
                     </p>
                     <GoTrash
                       onClick={() => handleDelete(product.id)}
@@ -199,20 +195,18 @@ export default function ProductCart() {
           </div>
           {products.length > 0 && (
             <div
-              className={
-                theme === "synthwave"
-                  ? "flex flex-col bg-base-200 p-4 rounded shadow-md max-w-[350px] w-full h-[350px] mt-4 md:mt-0"
-                  : "flex flex-col bg-base-100 p-4 rounded shadow-md max-w-[350px] w-full h-[350px] mt-4 md:mt-0"
-              }
+              className={`flex flex-col h-[350px] p-4 rounded shadow-md w-full md:w-1/3 ${
+                theme === "synthwave" ? "bg-base-200" : "bg-base-100"
+              }`}
             >
               <h3 className="text-xl font-bold mb-4">Order Summary</h3>
               <div className="flex justify-between font-semibold mb-2">
                 <span>Total Items:</span>
                 <span>{products.length}</span>
               </div>
-              <div className="flex justify-between mb-auto font-semibold ">
+              <div className="flex justify-between font-semibold mb-auto">
                 <span>Total Price:</span>
-                <span>$ {totalPrice()}</span>
+                <span>${totalPrice()}</span>
               </div>
               <button className="bg-blue-500 text-white p-2 rounded w-full mt-4">
                 Checkout

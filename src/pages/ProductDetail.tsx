@@ -3,19 +3,18 @@ import { useEffect, useState } from "react";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { Recipe } from "../types";
-import { useSelector, useDispatch } from "react-redux";
 import { toast, ToastContainer } from "react-toastify";
-import { addToCart, deleteCart } from "../store/cartSlice";
 import "react-toastify/dist/ReactToastify.css";
 import { FiShoppingCart } from "react-icons/fi";
+import { useSelector } from "react-redux";
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
-  const cartItems = useSelector((state: any) => state.cart.items) || [];
+  const [refresh, setRefresh] = useState(false);
+  const [cartItems, setCartItems] = useState<string[]>([]);
   const theme = useSelector((state: any) => state.theme.theme);
   const userId = JSON.parse(localStorage.getItem("userId") || "null");
-  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,36 +26,55 @@ export default function ProductDetail() {
           if (docSnap.exists()) {
             setRecipe(docSnap.data() as Recipe);
           } else {
-            console.log("maxsulot kelmadi!");
+            console.log("retsep topilmadi!");
             toast.error("Recipe not found.");
           }
         } catch (error) {
-          console.error("mahsulotda xatolik: ", error);
+          console.error("xato: ", error);
           toast.error("Error fetching recipe.");
+        }
+      } else {
+        console.error("xato");
+        toast.error("Recipe ID is missing");
+      }
+    };
+
+    const fetchCartItems = async () => {
+      if (userId) {
+        const cartDocRef = doc(db, "cart", userId);
+        try {
+          const cartDocSnap = await getDoc(cartDocRef);
+          if (cartDocSnap.exists()) {
+            setCartItems(Object.keys(cartDocSnap.data()));
+          }
+        } catch (error) {
+          console.error("xato: ", error);
         }
       }
     };
-    fetchRecipe();
-  }, [id]);
 
-  const handleAddToCartClick = async (
+    fetchRecipe();
+    fetchCartItems();
+  }, [id, userId, refresh]);
+
+  const handleCartClick = async (
+    product: Recipe,
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>
   ): Promise<void> => {
     e.stopPropagation();
 
-    if (!recipe || !recipe.id) {
-      console.error(" id da xatolik");
+    if (!id) {
+      console.error("id da xatolik");
       return;
     }
 
-    const productId = recipe.id;
-    const newCartItems = new Set(cartItems.map((item: any) => item.id));
+    const productId = id;
+    const newCartItems = new Set(cartItems);
 
     if (newCartItems.has(productId)) {
       newCartItems.delete(productId);
       toast.info("Removed from cart!");
-
-      dispatch(deleteCart(productId));
+      setRefresh(true);
 
       if (userId) {
         const cartDocRef = doc(db, "cart", userId);
@@ -68,39 +86,33 @@ export default function ProductDetail() {
             await setDoc(cartDocRef, cartData);
           }
         } catch (error) {
-          console.error("cart bilan xato ", error);
+          console.error("xato: ", error);
           toast.error("Error removing item from cart.");
         }
       }
     } else {
       newCartItems.add(productId);
       toast.success("Added to cart!");
-
-      dispatch(addToCart(recipe));
+      setRefresh(true);
 
       if (userId) {
         const cartDocRef = doc(db, "cart", userId);
         try {
-          const cartDocSnap = await getDoc(cartDocRef);
-          if (cartDocSnap.exists()) {
-            await setDoc(
-              cartDocRef,
-              {
-                [productId]: recipe,
-              },
-              { merge: true }
-            );
-          } else {
-            await setDoc(cartDocRef, {
-              [productId]: recipe,
-            });
-          }
+          await setDoc(
+            cartDocRef,
+            {
+              [productId]: product,
+            },
+            { merge: true }
+          );
         } catch (error) {
           console.error("xato: ", error);
           toast.error("Error adding item to cart.");
         }
       }
     }
+
+    setCartItems(Array.from(newCartItems));
   };
 
   if (!recipe) {
@@ -113,9 +125,7 @@ export default function ProductDetail() {
     );
   }
 
-  const isProductInCart =
-    Array.isArray(cartItems) &&
-    cartItems.some((item: any) => item.id === recipe.id);
+  const isProductInCart = cartItems.includes(recipe.id);
 
   return (
     <div className="container flex justify-center p-4">
@@ -214,13 +224,12 @@ export default function ProductDetail() {
           </p>
           <div className="flex justify-end gap-4 mt-4">
             <button
-              className={`border-2 rounded-lg shadow flex items-center gap-2 px-4 py-2 ${
+              className={`border-2 rounded-lg shadow flex items-center gap-2 px-4 py-2 transition-colors duration-300 ${
                 isProductInCart
-                  ? "border-green-100 bg-green-500 text-white"
-                  : "border-gray-300 bg-blue-500 text-white"
-              } transition-colors duration-300 hover:bg-blue-600`}
-              onClick={handleAddToCartClick}
-              disabled={isProductInCart}
+                  ? "border-green-100 bg-green-500 text-white hover:bg-green-600"
+                  : "border-gray-300 bg-blue-500 text-white hover:bg-blue-600"
+              }`}
+              onClick={(e) => handleCartClick(recipe, e)}
             >
               <FiShoppingCart
                 className={`text-xl ${
